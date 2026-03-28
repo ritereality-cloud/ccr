@@ -30,6 +30,7 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
   AlignLeft,
   AlignCenter,
   AlignRight,
@@ -46,6 +47,7 @@ import {
   ChevronDown,
   Trash2,
   Upload,
+  SeparatorHorizontal,
 } from "lucide-react"
 
 // ─── Reusable toolbar primitives ────────────────────────────────────────────
@@ -420,7 +422,7 @@ function ColorPickerButton({ editor }: { editor: Editor }) {
 
 export function EditorToolbar({ editor }: { editor: Editor }) {
   return (
-    <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-border bg-muted/30">
+    <div className="sticky top-0 z-40 flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-border bg-card shadow-sm">
       {/* History */}
       <ActionButton
         tooltip="Undo (Ctrl+Z)"
@@ -501,6 +503,13 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
       >
         <Heading3 size={15} />
       </ToggleButton>
+      <ToggleButton
+        tooltip="Heading 4"
+        pressed={editor.isActive("heading", { level: 4 })}
+        onToggle={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+      >
+        <Heading4 size={15} />
+      </ToggleButton>
 
       <ToolbarSeparator />
 
@@ -568,12 +577,12 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
       <ToolbarSeparator />
 
-      {/* Horizontal Rule */}
+      {/* Horizontal Rule / Divider */}
       <ActionButton
-        tooltip="Horizontal Rule"
+        tooltip="Insert Divider"
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
       >
-        <Minus size={15} />
+        <SeparatorHorizontal size={15} />
       </ActionButton>
 
       <ToolbarSeparator />

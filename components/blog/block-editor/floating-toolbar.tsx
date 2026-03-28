@@ -318,6 +318,32 @@ export function FloatingToolbar({ editor, position, blockType }: FloatingToolbar
 
           <div className="w-px h-5 bg-border mx-1" />
 
+          {/* Quick Heading Buttons */}
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={cn(
+              "p-2 rounded hover:bg-muted text-xs font-bold",
+              editor.isActive("heading", { level: 3 }) && "bg-primary/10 text-primary"
+            )}
+            title="Heading 3"
+          >
+            <Heading3 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+            className={cn(
+              "p-2 rounded hover:bg-muted text-xs font-bold",
+              editor.isActive("heading", { level: 4 }) && "bg-primary/10 text-primary"
+            )}
+            title="Heading 4"
+          >
+            <Heading4 className="h-4 w-4" />
+          </button>
+
+          <div className="w-px h-5 bg-border mx-1" />
+
           {/* Insert Divider */}
           <button
             type="button"

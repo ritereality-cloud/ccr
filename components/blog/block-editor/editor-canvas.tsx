@@ -36,6 +36,7 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
   Image as ImageIcon,
   Table as TableIcon,
   Minus,
@@ -45,7 +46,8 @@ import {
   Type,
   Highlighter,
   Palette,
-  Pilcrow
+  Pilcrow,
+  SeparatorHorizontal
 } from "lucide-react"
 
 interface EditorCanvasProps {
@@ -328,7 +330,7 @@ export function EditorCanvas({
   return (
     <div className={cn("flex flex-col h-full", className)}>
       {/* Top Toolbar - Sticky */}
-      <div className="sticky top-0 z-40 bg-card border-b border-border px-2 py-1.5 flex items-center gap-1 flex-wrap">
+      <div className="sticky top-0 z-40 bg-card border-b border-border px-2 py-1.5 flex items-center gap-1 flex-wrap shadow-sm">
         {/* History */}
         <div className="flex items-center border-r border-border pr-2 mr-2">
           <button
@@ -579,7 +581,33 @@ export function EditorCanvas({
             className="p-1.5 rounded hover:bg-muted"
             title="Insert Divider"
           >
-            <Minus className="h-4 w-4" />
+            <SeparatorHorizontal className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Quick Heading Buttons */}
+        <div className="flex items-center border-l border-border pl-2 ml-2">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={cn(
+              "p-1.5 rounded hover:bg-muted text-xs font-semibold",
+              editor.isActive("heading", { level: 3 }) && "bg-muted text-primary"
+            )}
+            title="Heading 3"
+          >
+            <Heading3 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+            className={cn(
+              "p-1.5 rounded hover:bg-muted text-xs font-semibold",
+              editor.isActive("heading", { level: 4 }) && "bg-muted text-primary"
+            )}
+            title="Heading 4"
+          >
+            <Heading4 className="h-4 w-4" />
           </button>
         </div>
       </div>

@@ -31,6 +31,8 @@ import {
   X,
   ChevronDown,
   MessageCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react"
 
 type UserRole = "admin" | "agent" | "builder" | "buyer" | "customer"
@@ -157,6 +159,7 @@ const getNavConfig = (role: UserRole): NavSection[] => {
 export default function UnifiedSidebar({ userRole }: UnifiedSidebarProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
 
   const navConfig = getNavConfig(userRole)
@@ -172,27 +175,47 @@ export default function UnifiedSidebar({ userRole }: UnifiedSidebarProps) {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
+      {/* Minimize Button */}
+      <div className={cn(
+        "hidden md:flex items-center border-b border-border px-3 py-2",
+        isMinimized ? "justify-center" : "justify-end"
+      )}>
+        <button
+          onClick={() => setIsMinimized(!isMinimized)}
+          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          title={isMinimized ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isMinimized ? (
+            <PanelLeftOpen className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </button>
+      </div>
+
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
         {navConfig.map((section) => (
           <div key={section.title}>
-            {section.collapsible ? (
-              <button
-                onClick={() => toggleSection(section.title)}
-                className="flex items-center justify-between w-full text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2 hover:text-foreground transition-colors"
-              >
-                {section.title}
-                <ChevronDown
-                  className={cn(
-                    "h-3 w-3 transition-transform",
-                    collapsedSections[section.title] && "-rotate-90"
-                  )}
-                />
-              </button>
-            ) : (
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
-                {section.title}
-              </p>
+            {!isMinimized && (
+              section.collapsible ? (
+                <button
+                  onClick={() => toggleSection(section.title)}
+                  className="flex items-center justify-between w-full text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2 hover:text-foreground transition-colors"
+                >
+                  {section.title}
+                  <ChevronDown
+                    className={cn(
+                      "h-3 w-3 transition-transform",
+                      collapsedSections[section.title] && "-rotate-90"
+                    )}
+                  />
+                </button>
+              ) : (
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
+                  {section.title}
+                </p>
+              )
             )}
             {(!section.collapsible || !collapsedSections[section.title]) && (
               <div className="space-y-1">
@@ -204,15 +227,17 @@ export default function UnifiedSidebar({ userRole }: UnifiedSidebarProps) {
                       key={item.href}
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
+                      title={isMinimized ? item.label : undefined}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all",
                         active
                           ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                        isMinimized && "justify-center px-2"
                       )}
                     >
                       <Icon className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{item.label}</span>
+                      {!isMinimized && <span className="truncate">{item.label}</span>}
                     </Link>
                   )
                 })}
@@ -247,9 +272,11 @@ export default function UnifiedSidebar({ userRole }: UnifiedSidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-14 h-[calc(100vh-3.5rem)] w-64 border-r border-border bg-background z-40 transition-transform duration-300",
+          "fixed left-0 top-14 h-[calc(100vh-3.5rem)] border-r border-border bg-background z-40 transition-all duration-300",
+          isMinimized ? "w-16" : "w-64",
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
+        data-minimized={isMinimized}
       >
         <SidebarContent />
       </aside>

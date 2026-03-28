@@ -243,11 +243,13 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="basic">Basic Info</TabsTrigger>
-          <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="seo">SEO</TabsTrigger>
-        </TabsList>
+        <div className="sticky top-0 z-30 bg-background py-2 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 border-b border-border">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+            <TabsTrigger value="content">Content</TabsTrigger>
+            <TabsTrigger value="seo">SEO</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="basic" className="space-y-4 mt-6">
           <Card>
@@ -549,7 +551,7 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
             </div>
 
             <div className="lg:col-span-1">
-              <div className="sticky top-4">
+              <div className="sticky top-16">
                 <TableOfContents content={formData.content} />
               </div>
             </div>

@@ -28,7 +28,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
 
     extensions: [
       StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
+        heading: { levels: [1, 2, 3, 4] },
         // codeBlock and horizontalRule are included in StarterKit by default
       }),
       Image.configure({
@@ -85,9 +85,11 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
   if (!editor) return null
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-ring/30 transition-shadow">
+    <div className="border border-border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-ring/30 transition-shadow relative">
       <EditorToolbar editor={editor} />
-      <EditorContent editor={editor} />
+      <div className="max-h-[60vh] overflow-y-auto">
+        <EditorContent editor={editor} />
+      </div>
       {/* Status bar */}
       <div className="flex items-center justify-between px-3 py-1 border-t border-border bg-muted/20 text-xs text-muted-foreground select-none">
         <span>Rich Text Editor</span>
