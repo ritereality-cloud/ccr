@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useCallback } from "react"
-import type { Editor } from "@tiptap/react"
+import type { Editor } from "@tiptap/core"
 import { Toggle } from "@/components/ui/toggle"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"

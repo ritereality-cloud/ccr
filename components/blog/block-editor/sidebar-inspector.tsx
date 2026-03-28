@@ -1,6 +1,6 @@
 "use client"
 
-import type { Editor } from "@tiptap/react"
+import type { Editor } from "@tiptap/core"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import {
