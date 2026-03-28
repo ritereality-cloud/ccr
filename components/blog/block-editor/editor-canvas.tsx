@@ -8,12 +8,10 @@ import { Image } from "@tiptap/extension-image"
 import { Link } from "@tiptap/extension-link"
 import { TextAlign } from "@tiptap/extension-text-align"
 import { Underline } from "@tiptap/extension-underline"
-import { Typography } from "@tiptap/extension-typography"
 import { Table } from "@tiptap/extension-table"
 import { TableRow } from "@tiptap/extension-table-row"
 import { TableCell } from "@tiptap/extension-table-cell"
 import { TableHeader } from "@tiptap/extension-table-header"
-import { Highlight } from "@tiptap/extension-highlight"
 import { Color } from "@tiptap/extension-color"
 import { TextStyle } from "@tiptap/extension-text-style"
 import { useCallback, useState, useEffect } from "react"
@@ -44,7 +42,6 @@ import {
   Redo,
   Plus,
   Type,
-  Highlighter,
   Palette,
   Pilcrow,
   SeparatorHorizontal
@@ -139,7 +136,6 @@ export function EditorCanvas({
         types: ["heading", "paragraph"]
       }),
       Underline,
-      Typography,
       Table.configure({
         HTMLAttributes: {
           class: "wp-block wp-block-table"
@@ -149,9 +145,6 @@ export function EditorCanvas({
       TableRow,
       TableCell,
       TableHeader,
-      Highlight.configure({
-        multicolor: true
-      }),
       Color,
       TextStyle
     ],
@@ -431,17 +424,6 @@ export function EditorCanvas({
             title="Strikethrough"
           >
             <Strikethrough className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleHighlight().run()}
-            className={cn(
-              "p-1.5 rounded hover:bg-muted",
-              editor.isActive("highlight") && "bg-muted text-primary"
-            )}
-            title="Highlight"
-          >
-            <Highlighter className="h-4 w-4" />
           </button>
         </div>
 
