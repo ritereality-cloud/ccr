@@ -243,8 +243,8 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="sticky top-0 z-30 bg-background py-2 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 border-b border-border">
-          <TabsList className="grid w-full grid-cols-3">
+        <div className="sticky top-0 z-30 bg-background py-3 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 border-b border-border shadow-sm">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="seo">SEO</TabsTrigger>
@@ -501,14 +501,15 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="content" className="space-y-4 mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 space-y-4">
-              <Card>
-                <CardHeader>
+        <TabsContent value="content" className="mt-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Main Editor Area */}
+            <div className="flex-1 min-w-0 space-y-4">
+              <Card className="flex flex-col">
+                <CardHeader className="flex-shrink-0">
                   <CardTitle className="text-lg">Blog Content</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 overflow-auto">
+                <CardContent className="flex-1 space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Content *</label>
                     <RichTextEditor
@@ -550,8 +551,9 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
               </Card>
             </div>
 
-            <div className="lg:col-span-1">
-              <div className="sticky top-16">
+            {/* Table of Contents Sidebar - Fixed height with scroll */}
+            <div className="w-full lg:w-72 flex-shrink-0">
+              <div className="lg:sticky lg:top-16 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto">
                 <TableOfContents content={formData.content} />
               </div>
             </div>

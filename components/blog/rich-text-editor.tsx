@@ -85,13 +85,17 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
   if (!editor) return null
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-ring/30 transition-shadow relative">
-      <EditorToolbar editor={editor} />
-      <div className="max-h-[60vh] overflow-y-auto">
+    <div className="border border-border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-ring/30 transition-shadow relative flex flex-col h-[calc(100vh-280px)] min-h-[400px]">
+      {/* Toolbar - fixed at top */}
+      <div className="flex-shrink-0">
+        <EditorToolbar editor={editor} />
+      </div>
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto">
         <EditorContent editor={editor} />
       </div>
-      {/* Status bar */}
-      <div className="flex items-center justify-between px-3 py-1 border-t border-border bg-muted/20 text-xs text-muted-foreground select-none">
+      {/* Status bar - fixed at bottom */}
+      <div className="flex-shrink-0 flex items-center justify-between px-3 py-1 border-t border-border bg-muted/20 text-xs text-muted-foreground select-none">
         <span>Rich Text Editor</span>
         <div className="flex items-center gap-3">
           <span>{wordCount} {wordCount === 1 ? "word" : "words"}</span>

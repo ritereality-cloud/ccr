@@ -176,7 +176,7 @@ function LinkPopover({ editor }: { editor: Editor }) {
             </Button>
             {hasLink && (
               <Button size="sm" variant="outline" onClick={handleRemove} aria-label="Remove link">
-                <LinkOff size={14} />
+                <Link2Off size={14} />
               </Button>
             )}
           </div>
@@ -422,7 +422,7 @@ function ColorPickerButton({ editor }: { editor: Editor }) {
 
 export function EditorToolbar({ editor }: { editor: Editor }) {
   return (
-    <div className="sticky top-0 z-40 flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-border bg-card shadow-sm">
+    <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-border bg-card">
       {/* History */}
       <ActionButton
         tooltip="Undo (Ctrl+Z)"
