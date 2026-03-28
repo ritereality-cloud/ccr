@@ -18,6 +18,18 @@ interface BlogCategory {
   slug: string
 }
 
+interface BlogTag {
+  _id: string
+  name: string
+  slug: string
+}
+
+interface BlogKeyword {
+  _id: string
+  name: string
+  slug: string
+}
+
 interface BlogPostFormProps {
   initialData?: {
     _id?: string
@@ -95,15 +107,17 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   
   // Tags management state
-  const [availableTags, setAvailableTags] = useState<string[]>([])
+  const [availableTags, setAvailableTags] = useState<BlogTag[]>([])
   const [loadingTags, setLoadingTags] = useState(true)
   const [newTagName, setNewTagName] = useState("")
+  const [addingTag, setAddingTag] = useState(false)
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   
   // Keywords management state (for SEO)
-  const [availableKeywords, setAvailableKeywords] = useState<string[]>([])
+  const [availableKeywords, setAvailableKeywords] = useState<BlogKeyword[]>([])
   const [loadingKeywords, setLoadingKeywords] = useState(true)
   const [newKeywordName, setNewKeywordName] = useState("")
+  const [addingKeyword, setAddingKeyword] = useState(false)
   const [showKeywordDropdown, setShowKeywordDropdown] = useState(false)
 
   // Fetch available categories, tags, and keywords
@@ -267,23 +281,38 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
     }))
   }
 
-  const addNewTag = () => {
+  const addNewTag = async () => {
     if (!newTagName.trim()) return
-    const trimmedTag = newTagName.trim()
     
-    // Add to available tags if not exists
-    if (!availableTags.includes(trimmedTag)) {
-      setAvailableTags((prev) => [...prev, trimmedTag])
-    }
+    setAddingTag(true)
+    setError("")
     
-    // Add to selected tags if not already selected
-    if (!(formData.tags as string[]).includes(trimmedTag)) {
+    try {
+      const response = await fetch("/api/admin/blog/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newTagName.trim() }),
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to add tag")
+      }
+      
+      const data = await response.json()
+      
+      // Add to available tags and select it
+      setAvailableTags((prev) => [...prev, data.tag])
       setFormData((prev) => ({
         ...prev,
-        tags: [...(prev.tags as string[]), trimmedTag],
+        tags: [...(prev.tags as string[]), data.tag.name],
       }))
+      setNewTagName("")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add tag")
+    } finally {
+      setAddingTag(false)
     }
-    setNewTagName("")
   }
 
   // Keyword management functions (for SEO)
@@ -304,23 +333,38 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
     }))
   }
 
-  const addNewKeyword = () => {
+  const addNewKeyword = async () => {
     if (!newKeywordName.trim()) return
-    const trimmedKeyword = newKeywordName.trim()
     
-    // Add to available keywords if not exists
-    if (!availableKeywords.includes(trimmedKeyword)) {
-      setAvailableKeywords((prev) => [...prev, trimmedKeyword])
-    }
+    setAddingKeyword(true)
+    setError("")
     
-    // Add to selected keywords if not already selected
-    if (!(formData.meta_keywords as string[]).includes(trimmedKeyword)) {
+    try {
+      const response = await fetch("/api/admin/blog/keywords", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newKeywordName.trim() }),
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to add keyword")
+      }
+      
+      const data = await response.json()
+      
+      // Add to available keywords and select it
+      setAvailableKeywords((prev) => [...prev, data.keyword])
       setFormData((prev) => ({
         ...prev,
-        meta_keywords: [...(prev.meta_keywords as string[]), trimmedKeyword],
+        meta_keywords: [...(prev.meta_keywords as string[]), data.keyword.name],
       }))
+      setNewKeywordName("")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add keyword")
+    } finally {
+      setAddingKeyword(false)
     }
-    setNewKeywordName("")
   }
 
   const handleSubmit = async (e: React.FormEvent, publishStatus: boolean = true) => {
@@ -599,10 +643,14 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
                               e.stopPropagation()
                               addNewTag()
                             }}
-                            disabled={!newTagName.trim()}
+                            disabled={!newTagName.trim() || addingTag}
                             className="h-8 px-2"
                           >
-                            <Plus className="h-4 w-4" />
+                            {addingTag ? (
+                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            ) : (
+                              <Plus className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -620,16 +668,16 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
                         <div className="py-1">
                           {availableTags.map((tag) => (
                             <button
-                              key={tag}
+                              key={tag._id}
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                toggleTag(tag)
+                                toggleTag(tag.name)
                               }}
                               className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between"
                             >
-                              <span>{tag}</span>
-                              {(formData.tags as string[]).includes(tag) && (
+                              <span>{tag.name}</span>
+                              {(formData.tags as string[]).includes(tag.name) && (
                                 <Check className="h-4 w-4 text-primary" />
                               )}
                             </button>
@@ -895,10 +943,14 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
                               e.stopPropagation()
                               addNewKeyword()
                             }}
-                            disabled={!newKeywordName.trim()}
+                            disabled={!newKeywordName.trim() || addingKeyword}
                             className="h-8 px-2"
                           >
-                            <Plus className="h-4 w-4" />
+                            {addingKeyword ? (
+                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            ) : (
+                              <Plus className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -916,16 +968,16 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
                         <div className="py-1">
                           {availableKeywords.map((keyword) => (
                             <button
-                              key={keyword}
+                              key={keyword._id}
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                toggleKeyword(keyword)
+                                toggleKeyword(keyword.name)
                               }}
                               className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between"
                             >
-                              <span>{keyword}</span>
-                              {(formData.meta_keywords as string[]).includes(keyword) && (
+                              <span>{keyword.name}</span>
+                              {(formData.meta_keywords as string[]).includes(keyword.name) && (
                                 <Check className="h-4 w-4 text-primary" />
                               )}
                             </button>
