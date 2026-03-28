@@ -52,6 +52,19 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
     return [initialData.category]
   }
   
+  // Parse initial tags
+  const getInitialTags = () => {
+    if (!initialData?.tags) return []
+    if (Array.isArray(initialData.tags)) return initialData.tags
+    return initialData.tags.split(",").map((t: string) => t.trim()).filter(Boolean)
+  }
+  
+  // Parse initial keywords
+  const getInitialKeywords = () => {
+    if (!initialData?.meta_keywords) return []
+    return initialData.meta_keywords.split(",").map((k: string) => k.trim()).filter(Boolean)
+  }
+
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     excerpt: initialData?.excerpt || "",
@@ -63,11 +76,11 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
     banner_image: initialData?.banner_image || "",
     meta_title: initialData?.meta_title || "",
     meta_description: initialData?.meta_description || "",
-    meta_keywords: initialData?.meta_keywords || "",
+    meta_keywords: getInitialKeywords(),
     og_title: initialData?.og_title || "",
     og_description: initialData?.og_description || "",
     og_image: initialData?.og_image || "",
-    tags: Array.isArray(initialData?.tags) ? initialData.tags.join(", ") : initialData?.tags || "",
+    tags: getInitialTags(),
     is_published: initialData?.is_published || false,
   })
   const [loading, setLoading] = useState(false)
@@ -80,8 +93,20 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
   const [newCategoryName, setNewCategoryName] = useState("")
   const [addingCategory, setAddingCategory] = useState(false)
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
+  
+  // Tags management state
+  const [availableTags, setAvailableTags] = useState<string[]>([])
+  const [loadingTags, setLoadingTags] = useState(true)
+  const [newTagName, setNewTagName] = useState("")
+  const [showTagDropdown, setShowTagDropdown] = useState(false)
+  
+  // Keywords management state (for SEO)
+  const [availableKeywords, setAvailableKeywords] = useState<string[]>([])
+  const [loadingKeywords, setLoadingKeywords] = useState(true)
+  const [newKeywordName, setNewKeywordName] = useState("")
+  const [showKeywordDropdown, setShowKeywordDropdown] = useState(false)
 
-  // Fetch available categories
+  // Fetch available categories, tags, and keywords
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -97,7 +122,37 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
       }
     }
     
+    const fetchTags = async () => {
+      try {
+        const response = await fetch("/api/admin/blog/tags")
+        if (response.ok) {
+          const data = await response.json()
+          setAvailableTags(data.tags || [])
+        }
+      } catch (err) {
+        console.error("[v0] Error fetching tags:", err)
+      } finally {
+        setLoadingTags(false)
+      }
+    }
+    
+    const fetchKeywords = async () => {
+      try {
+        const response = await fetch("/api/admin/blog/keywords")
+        if (response.ok) {
+          const data = await response.json()
+          setAvailableKeywords(data.keywords || [])
+        }
+      } catch (err) {
+        console.error("[v0] Error fetching keywords:", err)
+      } finally {
+        setLoadingKeywords(false)
+      }
+    }
+    
     fetchCategories()
+    fetchTags()
+    fetchKeywords()
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -194,6 +249,80 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
     }
   }
 
+  // Tag management functions
+  const toggleTag = (tagName: string) => {
+    setFormData((prev) => {
+      const currentTags = prev.tags as string[]
+      if (currentTags.includes(tagName)) {
+        return { ...prev, tags: currentTags.filter((t) => t !== tagName) }
+      }
+      return { ...prev, tags: [...currentTags, tagName] }
+    })
+  }
+
+  const removeTag = (tagName: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: (prev.tags as string[]).filter((t) => t !== tagName),
+    }))
+  }
+
+  const addNewTag = () => {
+    if (!newTagName.trim()) return
+    const trimmedTag = newTagName.trim()
+    
+    // Add to available tags if not exists
+    if (!availableTags.includes(trimmedTag)) {
+      setAvailableTags((prev) => [...prev, trimmedTag])
+    }
+    
+    // Add to selected tags if not already selected
+    if (!(formData.tags as string[]).includes(trimmedTag)) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...(prev.tags as string[]), trimmedTag],
+      }))
+    }
+    setNewTagName("")
+  }
+
+  // Keyword management functions (for SEO)
+  const toggleKeyword = (keyword: string) => {
+    setFormData((prev) => {
+      const currentKeywords = prev.meta_keywords as string[]
+      if (currentKeywords.includes(keyword)) {
+        return { ...prev, meta_keywords: currentKeywords.filter((k) => k !== keyword) }
+      }
+      return { ...prev, meta_keywords: [...currentKeywords, keyword] }
+    })
+  }
+
+  const removeKeyword = (keyword: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      meta_keywords: (prev.meta_keywords as string[]).filter((k) => k !== keyword),
+    }))
+  }
+
+  const addNewKeyword = () => {
+    if (!newKeywordName.trim()) return
+    const trimmedKeyword = newKeywordName.trim()
+    
+    // Add to available keywords if not exists
+    if (!availableKeywords.includes(trimmedKeyword)) {
+      setAvailableKeywords((prev) => [...prev, trimmedKeyword])
+    }
+    
+    // Add to selected keywords if not already selected
+    if (!(formData.meta_keywords as string[]).includes(trimmedKeyword)) {
+      setFormData((prev) => ({
+        ...prev,
+        meta_keywords: [...(prev.meta_keywords as string[]), trimmedKeyword],
+      }))
+    }
+    setNewKeywordName("")
+  }
+
   const handleSubmit = async (e: React.FormEvent, publishStatus: boolean = true) => {
     e.preventDefault()
     setLoading(true)
@@ -208,7 +337,8 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
         ...formData,
         // Send categories as array for multiple selection support
         category: formData.categories,
-        tags: formData.tags.split(",").map((t) => t.trim()).filter(Boolean),
+        tags: formData.tags,
+        meta_keywords: (formData.meta_keywords as string[]).join(", "),
         is_published: publishStatus,
       }
 
@@ -409,6 +539,127 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
                 </div>
               </div>
 
+              {/* Tags Section */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tags</label>
+                <div className="relative">
+                  {/* Selected tags */}
+                  <div
+                    className="min-h-[42px] w-full px-3 py-2 border border-border rounded-md bg-background cursor-pointer flex flex-wrap gap-1.5 items-center"
+                    onClick={() => setShowTagDropdown(!showTagDropdown)}
+                  >
+                    {(formData.tags as string[]).length === 0 ? (
+                      <span className="text-sm text-muted-foreground">Select or add tags...</span>
+                    ) : (
+                      (formData.tags as string[]).map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-secondary text-secondary-foreground text-xs font-medium rounded-full"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              removeTag(tag)
+                            }}
+                            className="hover:text-secondary-foreground/70"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Dropdown */}
+                  {showTagDropdown && (
+                    <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-64 overflow-auto">
+                      {/* Add new tag input */}
+                      <div className="p-2 border-b border-border">
+                        <div className="flex gap-2">
+                          <Input
+                            type="text"
+                            placeholder="Add new tag..."
+                            value={newTagName}
+                            onChange={(e) => setNewTagName(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault()
+                                addNewTag()
+                              }
+                            }}
+                            className="h-8 text-sm"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              addNewTag()
+                            }}
+                            disabled={!newTagName.trim()}
+                            className="h-8 px-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Tag list */}
+                      {loadingTags ? (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          Loading tags...
+                        </div>
+                      ) : availableTags.length === 0 ? (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          No tags yet. Add one above.
+                        </div>
+                      ) : (
+                        <div className="py-1">
+                          {availableTags.map((tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleTag(tag)
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between"
+                            >
+                              <span>{tag}</span>
+                              {(formData.tags as string[]).includes(tag) && (
+                                <Check className="h-4 w-4 text-primary" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Close button */}
+                      <div className="p-2 border-t border-border">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-8"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setShowTagDropdown(false)
+                          }}
+                        >
+                          Done
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Add tags to help categorize your content. Type to create new tags.
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <label htmlFor="excerpt" className="text-sm font-medium">
                   Excerpt *
@@ -502,27 +753,29 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
         </TabsContent>
 
         <TabsContent value="content" className="mt-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Main Editor Area */}
-            <div className="flex-1 min-w-0 space-y-4">
-              <Card className="flex flex-col">
-                <CardHeader className="flex-shrink-0">
+          {/* Fixed height container for the entire content section */}
+          <div className="h-[calc(100vh-200px)] min-h-[500px] flex flex-col lg:flex-row gap-4">
+            {/* Main Editor Area - scrolls independently */}
+            <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+              <Card className="flex flex-col flex-1 overflow-hidden">
+                <CardHeader className="flex-shrink-0 py-3">
                   <CardTitle className="text-lg">Blog Content</CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Content *</label>
+                <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
+                  {/* Editor with fixed toolbar and scrollable content */}
+                  <div className="flex-1 overflow-hidden border-t border-border">
                     <RichTextEditor
                       content={formData.content}
                       onChange={(content) => setFormData((prev) => ({ ...prev, content }))}
                       placeholder="Write your blog content with rich formatting, images, and more..."
                     />
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="readTime" className="text-sm font-medium">
-                        Read Time (minutes)
+                  
+                  {/* Read time input - fixed at bottom */}
+                  <div className="flex-shrink-0 p-4 border-t border-border bg-muted/30">
+                    <div className="flex items-center gap-4">
+                      <label htmlFor="readTime" className="text-sm font-medium whitespace-nowrap">
+                        Read Time
                       </label>
                       <Input
                         id="readTime"
@@ -530,32 +783,18 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
                         type="number"
                         value={formData.readTime}
                         onChange={handleChange}
+                        className="w-20"
                       />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label htmlFor="tags" className="text-sm font-medium">
-                        Tags (comma-separated)
-                      </label>
-                      <Input
-                        id="tags"
-                        name="tags"
-                        type="text"
-                        placeholder="tag1, tag2, tag3"
-                        value={formData.tags}
-                        onChange={handleChange}
-                      />
+                      <span className="text-sm text-muted-foreground">minutes</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Table of Contents Sidebar - Fixed height with scroll */}
-            <div className="w-full lg:w-72 flex-shrink-0">
-              <div className="lg:sticky lg:top-16 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto">
-                <TableOfContents content={formData.content} />
-              </div>
+            {/* Sidebar - fixed position, scrolls independently */}
+            <div className="w-full lg:w-80 flex-shrink-0 flex flex-col gap-4 lg:overflow-y-auto">
+              <TableOfContents content={formData.content} />
             </div>
           </div>
         </TabsContent>
@@ -596,18 +835,125 @@ export default function BlogPostForm({ initialData }: BlogPostFormProps) {
                 <p className="text-xs text-muted-foreground">{formData.meta_description.length}/160 characters</p>
               </div>
 
+              {/* Meta Keywords - Multi-select */}
               <div className="space-y-2">
-                <label htmlFor="meta_keywords" className="text-sm font-medium">
-                  Meta Keywords (comma-separated)
-                </label>
-                <Input
-                  id="meta_keywords"
-                  name="meta_keywords"
-                  type="text"
-                  placeholder="keyword1, keyword2, keyword3"
-                  value={formData.meta_keywords}
-                  onChange={handleChange}
-                />
+                <label className="text-sm font-medium">Meta Keywords</label>
+                <div className="relative">
+                  {/* Selected keywords */}
+                  <div
+                    className="min-h-[42px] w-full px-3 py-2 border border-border rounded-md bg-background cursor-pointer flex flex-wrap gap-1.5 items-center"
+                    onClick={() => setShowKeywordDropdown(!showKeywordDropdown)}
+                  >
+                    {(formData.meta_keywords as string[]).length === 0 ? (
+                      <span className="text-sm text-muted-foreground">Select or add keywords...</span>
+                    ) : (
+                      (formData.meta_keywords as string[]).map((keyword) => (
+                        <span
+                          key={keyword}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent text-accent-foreground text-xs font-medium rounded-full"
+                        >
+                          {keyword}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              removeKeyword(keyword)
+                            }}
+                            className="hover:text-accent-foreground/70"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Dropdown */}
+                  {showKeywordDropdown && (
+                    <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-64 overflow-auto">
+                      {/* Add new keyword input */}
+                      <div className="p-2 border-b border-border">
+                        <div className="flex gap-2">
+                          <Input
+                            type="text"
+                            placeholder="Add new keyword..."
+                            value={newKeywordName}
+                            onChange={(e) => setNewKeywordName(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault()
+                                addNewKeyword()
+                              }
+                            }}
+                            className="h-8 text-sm"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              addNewKeyword()
+                            }}
+                            disabled={!newKeywordName.trim()}
+                            className="h-8 px-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Keyword list */}
+                      {loadingKeywords ? (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          Loading keywords...
+                        </div>
+                      ) : availableKeywords.length === 0 ? (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          No keywords yet. Add one above.
+                        </div>
+                      ) : (
+                        <div className="py-1">
+                          {availableKeywords.map((keyword) => (
+                            <button
+                              key={keyword}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleKeyword(keyword)
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between"
+                            >
+                              <span>{keyword}</span>
+                              {(formData.meta_keywords as string[]).includes(keyword) && (
+                                <Check className="h-4 w-4 text-primary" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Close button */}
+                      <div className="p-2 border-t border-border">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-8"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setShowKeywordDropdown(false)
+                          }}
+                        >
+                          Done
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Add SEO keywords to improve search visibility.
+                </p>
               </div>
 
               <div className="space-y-2">

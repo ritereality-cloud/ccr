@@ -85,9 +85,9 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
   if (!editor) return null
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-ring/30 transition-shadow relative flex flex-col h-[calc(100vh-280px)] min-h-[400px]">
+    <div className="flex flex-col h-full overflow-hidden focus-within:ring-2 focus-within:ring-ring/30 focus-within:ring-inset transition-shadow">
       {/* Toolbar - fixed at top */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 bg-card border-b border-border">
         <EditorToolbar editor={editor} />
       </div>
       {/* Scrollable content area */}
@@ -95,11 +95,11 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
         <EditorContent editor={editor} />
       </div>
       {/* Status bar - fixed at bottom */}
-      <div className="flex-shrink-0 flex items-center justify-between px-3 py-1 border-t border-border bg-muted/20 text-xs text-muted-foreground select-none">
+      <div className="flex-shrink-0 flex items-center justify-between px-3 py-1.5 border-t border-border bg-muted/30 text-xs text-muted-foreground select-none">
         <span>Rich Text Editor</span>
         <div className="flex items-center gap-3">
           <span>{wordCount} {wordCount === 1 ? "word" : "words"}</span>
-          <span className="text-border">·</span>
+          <span className="text-muted-foreground/50">|</span>
           <span>{charCount} {charCount === 1 ? "character" : "characters"}</span>
         </div>
       </div>
